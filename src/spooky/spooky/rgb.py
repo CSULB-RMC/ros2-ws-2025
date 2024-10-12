@@ -1,6 +1,7 @@
+import can
 import rclpy
 from rclpy.node import Node
-import can
+
 from std_msgs.msg import String
 
 
@@ -48,14 +49,14 @@ class rgb(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    minimal_publisher = MinimalPublisher()
+    rgb_leds = rgb()
 
-    rclpy.spin(minimal_publisher)
+    rclpy.spin(rgb_leds)
 
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
     # when the garbage collector destroys the node object)
-    minimal_publisher.destroy_node()
+    rgb_leds.destroy_node()
     rclpy.shutdown()
 
 
