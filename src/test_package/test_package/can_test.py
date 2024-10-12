@@ -20,7 +20,7 @@ class CanTest(Node):
         self.bus.send(can_msg)
 
     def timer_callback(self):
-        bytes_range = 8
+        bytes_range = 4
         frequency_floor = 10
         data: int = 65
         temp_data: list[int] = []
@@ -52,8 +52,10 @@ class CanTest(Node):
             # convert signal to byte array
             for i in range(bytes_range - 1, -1, -1):
                 temp_data.append((data >> (8*i)) & 0xff)
-
-        self.can_publish(19, temp_data, True)
+        
+        # "Big Endian" left to right
+        # 3,232 is "1000" or OFF
+        self.can_publish(30, [0,0,3,232,3,232,3,232], True)
 
 def main(args=None):
     rclpy.init(args=args)
