@@ -26,25 +26,24 @@ class rgb(Node):
         return x, y
 
     # callable method that allows for using classic rgb(255,255,255)
-    # does this by assigning the converted hex values to an array[12]
+    # does this by assigning the converted hex values to an array
     def setrgb(self, r, g, b):
         global values
-        values = [0,0]*6
-        i = 1
+        values = [0] * 8
         self.conval(r)
-        values[i*0] = x
-        values[i*1] = y
+        values[2] = x
+        values[3] = y
         self.conval(g)
-        values[i*2] = x
-        values[i*3] = y
+        values[4] = x
+        values[5] = y
         self.conval(b)
-        values[i*4] = x
-        values[i*5] = y
+        values[6] = x
+        values[7] = y
 
-    # i couldn't get the two leading 0's without doing an array slice
+    # can method to publish the can message, derrived from the topmost method
     # theoretically should reproduce the [0,0,0,0,0,0,0,0]
     def timer_callback(self):
-        self.can_publish(30, values[:8], True)
+        self.can_publish(30, values, True)
 
 def main(args=None):
     rclpy.init(args=args)
