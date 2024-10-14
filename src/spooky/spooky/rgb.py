@@ -11,6 +11,7 @@ class rgb(Node):
         timer_period = 0.5  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.bus = can.interface.Bus(interface='socketcan', channel='vcan0', bitrate='500000')
+        self.values = [0] * 8
 
     def can_publish(self, arbitration_id, data, is_extended_id) -> None:
         can_msg = can.Message(
@@ -25,8 +26,6 @@ class rgb(Node):
     def conval(self, value):
         # just so everyone knows, this conversion was confusing as hell
         prog = int(1000 - (value * (1000 - 500) / 255))
-        global x
-        global y
         x = (prog >> 8) & 0xFF
         y = prog & 0xFF
         return x, y
@@ -34,22 +33,14 @@ class rgb(Node):
     # callable method that allows for using classic rgb(255,255,255)
     # does this by assigning the converted hex values to an array
     def setrgb(self, r, g, b):
-        global values
-        values = [0] * 8
-        self.conval(r)
-        values[2] = x
-        values[3] = y
-        self.conval(g)
-        values[4] = x
-        values[5] = y
-        self.conval(b)
-        values[6] = x
-        values[7] = y
+        self.values[2], self.values[3] = self.conval(r)
+        self.values[4], self.values[5] = self.conval(g)
+        self.values[6], self.values[7] = self.conval(b)
 
     # can method to publish the can message, derrived from the topmost method
     # theoretically should reproduce the [0,0,0,0,0,0,0,0]
     def timer_callback(self):
-        self.can_publish(30, values, True)
+        self.can_publish(30, self.values, True)
 
 def main(args=None):
     rclpy.init(args=args)
