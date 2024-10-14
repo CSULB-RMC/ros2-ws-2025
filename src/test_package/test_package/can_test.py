@@ -52,7 +52,7 @@ class CanTest(Node):
             # convert signal to byte array
             for i in range(bytes_range - 1, -1, -1):
                 temp_data.append((data >> (8*i)) & 0xff)
-        
+
         self.can_publish(19, temp_data, True)
 
 def main(args=None):
