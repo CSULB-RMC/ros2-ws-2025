@@ -1,5 +1,6 @@
 import can
 import rclpy
+import time
 from rclpy.node import Node
 # from std_msgs.msg import String
 
@@ -8,9 +9,9 @@ class rgb(Node):
 
     def __init__(self):
         super().__init__('rgb_leds')
-        timer_period = 0.5  # seconds
+        timer_period = 4  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
-        self.bus = can.interface.Bus(interface='socketcan', channel='vcan0', bitrate='500000')
+        self.bus = can.interface.Bus(interface='socketcan', channel='can0', bitrate='500000')
         self.values = [0] * 8
 
     def can_publish(self, arbitration_id, data, is_extended_id) -> None:
@@ -32,15 +33,21 @@ class rgb(Node):
 
     # callable method that allows for using classic rgb(255,255,255)
     # does this by assigning the converted hex values to an array
-    def setrgb(self, r, g, b):
+    def setRGB(self, r, g, b):
         self.values[2], self.values[3] = self.conval(r)
         self.values[4], self.values[5] = self.conval(g)
         self.values[6], self.values[7] = self.conval(b)
+        self.can_publish(30, self.values, True)
 
     # can method to publish the can message, derrived from the topmost method
     # theoretically should reproduce the [0,0,0,0,0,0,0,0]
     def timer_callback(self):
-        self.can_publish(30, self.values, True)
+        self.setRGB(255, 0, 0)
+        time.sleep(1)
+        self.setRGB(0, 255, 0)
+        time.sleep(1)
+        self.setRGB(0, 0, 255)
+        time.sleep(1)
 
 def main(args=None):
     rclpy.init(args=args)
