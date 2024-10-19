@@ -46,6 +46,7 @@ public:
 
   void play() {
     ifstream file("src/bmo_ros/frameSets/" + set + ".txt");
+    string lastAnimation = set;
 
     if(!file.is_open()) {
         cerr << "Error opening file" << endl;
@@ -80,7 +81,9 @@ public:
             changeFrame(clearing_array[0][0], clearing_array[0][1], bg_color);
             clearing_array.erase(clearing_array.begin());
         }
-        usleep(600000);
+        if(set != lastAnimation) {
+          break;
+        }
     }
     file.close();
   }
@@ -96,7 +99,7 @@ public:
 
     auto timer_callback =
       [this]() -> void {  
-        this->count_ += 1;
+        
       };
     timer_ = this->create_wall_timer(500ms, timer_callback);
 
@@ -120,13 +123,15 @@ public:
           default:
             this->set = "loading";
         }
+        play();
       };
     subscription_ =
       this->create_subscription<std_msgs::msg::Int32>("bmo_animation", 10, change_animation);
+
     play();
     play();
     play();
-    play();
+    set = "blink";
     play();
   }
 

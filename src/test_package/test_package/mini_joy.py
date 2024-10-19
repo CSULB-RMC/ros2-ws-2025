@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Joy
-from std_msgs.msg import String, UInt8, Bool
+from std_msgs.msg import String, UInt8, Bool, Int32
 
 # This program handles translating the controller inputs from the driver station to be published to the onboard computer on the robot.
 class MiniJoy(Node):
@@ -11,6 +11,8 @@ class MiniJoy(Node):
         # Publishers for the left and right drivetrain motors
         self.dt_l_publisher_ = self.create_publisher(UInt8, 'dt_left', 10)
         self.dt_r_publisher_ = self.create_publisher(UInt8, 'dt_right', 10)
+        self.bmo_face_ = self.create_publisher(Int32, 'bmo_animation', 10)
+
 
         # Intakes the controller inputs from the ros joy package
         self.subscription = self.create_subscription(
@@ -47,6 +49,15 @@ class MiniJoy(Node):
         else:
             uint8.data = 50 # deadband resets it to neutral
             self.dt_r_publisher_.publish(uint8)    
+
+        if msg.buttons[0]:
+            self.bmo_face_.publish(0)
+        elif msg.buttons[1]:
+            self.bmo_face_.publish(1)
+        elif msg.buttons[2]:
+            self.bmo_face_.publish(2)
+        elif msg.buttons[3]:
+            self.bmo_face_.publish(3)
 
 def main(args=None):
     print("Joystick Live")
