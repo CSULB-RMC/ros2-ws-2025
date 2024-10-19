@@ -50,14 +50,19 @@ class MiniJoy(Node):
             uint8.data = 50 # deadband resets it to neutral
             self.dt_r_publisher_.publish(uint8)    
 
+        temp = Int32()
         if msg.buttons[0]:
-            self.bmo_face_.publish(0)
+            temp.data = 0
+            self.bmo_face_.publish(temp)
         elif msg.buttons[1]:
-            self.bmo_face_.publish(1)
+            temp.data = 1
+            self.bmo_face_.publish(temp)
         elif msg.buttons[2]:
-            self.bmo_face_.publish(2)
+            temp.data = 2
+            self.bmo_face_.publish(temp)
         elif msg.buttons[3]:
-            self.bmo_face_.publish(3)
+            temp.data = 3
+            self.bmo_face_.publish(temp)
 
 def main(args=None):
     print("Joystick Live")

@@ -105,7 +105,6 @@ public:
 
     auto change_animation =
       [this](std_msgs::msg::Int32::UniquePtr msg) -> void {
-        RCLCPP_INFO(this->get_logger(), "Changing Animation");
         
         switch(msg->data) {
           case 0:
