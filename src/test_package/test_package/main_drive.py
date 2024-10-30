@@ -105,13 +105,13 @@ class DrivetrainExcavator(Node):
     def timer_callback(self):
         temp_data = Vesc.signal_conversion(self.ex_dt_left_speed, 4, 1000)  # Has to be 4 to work on vesc
         # can message for right and left motor
-        self.can_publish(Vesc.id_conversion(15), temp_data, True)
-        self.can_publish(Vesc.id_conversion(16), temp_data, True) 
+        self.can_publish(Vesc.id_conversion(15, 0), temp_data, True)
+        self.can_publish(Vesc.id_conversion(16, 0), temp_data, True) 
 
         # converts controller signal to bytes array
         temp_data = Vesc.signal_conversion(self.ex_dt_right_speed, 4, 1000)  # Has to be 4 to work on vesc
-        self.can_publish(Vesc.id_conversion(17), temp_data, True)
-        self.can_publish(Vesc.id_conversion(18), temp_data, True)
+        self.can_publish(Vesc.id_conversion(17, 0), temp_data, True)
+        self.can_publish(Vesc.id_conversion(18, 0), temp_data, True)
 
 def main(args=None):
     print("Bus Publisher Active New")
