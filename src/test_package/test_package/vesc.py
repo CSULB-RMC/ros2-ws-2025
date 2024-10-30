@@ -3,13 +3,13 @@ class Vesc():
         pass
 
     # Adds command id to initial device id
-    def id_conversion(self, device_id: int, command_id: int)->int:
+    def id_conversion(device_id: int, command_id: int)->int:
         return (command_id << 8) | device_id
     
     # Converts Controller Speed to byte array (decimal form)
     # Alg: signal -> percentage * 1000 (UInt16) -> Hexadecimal Byte Form -> Decimal Byte Form 
     # Ex. 200 -> 50% -> 50,000 = [80, 200]
-    def signal_conversion(self, msg_data: int, bytes_range: int, frequency_floor: int) -> list[int]:
+    def signal_conversion(msg_data: int, bytes_range: int, frequency_floor: int) -> list[int]:
         data: int = msg_data 
         temp_data: list[int] = []
 
