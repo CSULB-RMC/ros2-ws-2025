@@ -4,7 +4,7 @@ from sensor_msgs.msg import Joy
 from std_msgs.msg import UInt8, String
 #ignore can import error if it's there, it works if you installed python-can
 import can
-from vesc import Vesc
+from .vesc import Vesc as vesc
 
 
 class DrivetrainExcavator(Node):
@@ -33,7 +33,7 @@ class DrivetrainExcavator(Node):
 
         # create can bus link, right now is linked to virtual vcan 0, most likely
         # will be can0 when on the bot
-        self.bus = can.interface.Bus(interface='socketcan', channel='can0', bitrate='500000')
+        self.bus = can.interface.Bus(interface='socketcan', channel='vcan0', bitrate='500000')
 
         self.i = 0
     
@@ -71,7 +71,7 @@ class DrivetrainExcavator(Node):
             return None
         self.ex_conveyer_speed = msg.data
 
-        temp_data = self.signal_conversion(msg.data, 8, 10)
+        temp_data = vesc.signal_conversion(msg.data, 8, 10)
 
         self.can_publish(19, temp_data, True) 
 
@@ -80,7 +80,7 @@ class DrivetrainExcavator(Node):
         if self.ex_arm_speed == msg.data:
             return None
         self.ex_arm_speed = msg.data 
-        temp_data = self.signal_conversion(msg.data, 8, 10)
+        temp_data = vesc.signal_conversion(msg.data, 8, 10)
 
         self.can_publish(21, temp_data, True)
     
@@ -88,7 +88,7 @@ class DrivetrainExcavator(Node):
         if self.ex_digger_speed == msg.data:
             return None
         self.ex_digger_speed = msg.data 
-        temp_data = self.signal_conversion(msg.data, 8, 10)
+        temp_data = vesc.signal_conversion(msg.data, 8, 10)
 
         self.can_publish(23, temp_data, True)
 
@@ -98,20 +98,20 @@ class DrivetrainExcavator(Node):
             return None
         self.ex_servo_speed = msg.data
 
-        temp_data = self.signal_conversion(msg.data, 8, 100)
+        temp_data = vesc.signal_conversion(msg.data, 8, 100)
 
         self.can_publish(25, temp_data, True) 
 
     def timer_callback(self):
-        temp_data = Vesc.signal_conversion(self.ex_dt_left_speed, 4, 1000)  # Has to be 4 to work on vesc
+        temp_data = vesc.signal_conversion(self.ex_dt_left_speed, 4, 1000)  # Has to be 4 to work on vesc
         # can message for right and left motor
-        self.can_publish(Vesc.id_conversion(15, 0), temp_data, True)
-        self.can_publish(Vesc.id_conversion(16, 0), temp_data, True) 
+        self.can_publish(vesc.id_conversion(15, 3), temp_data, True)
+        self.can_publish(vesc.id_conversion(16, 3), temp_data, True) 
 
         # converts controller signal to bytes array
-        temp_data = Vesc.signal_conversion(self.ex_dt_right_speed, 4, 1000)  # Has to be 4 to work on vesc
-        self.can_publish(Vesc.id_conversion(17, 0), temp_data, True)
-        self.can_publish(Vesc.id_conversion(18, 0), temp_data, True)
+        temp_data = vesc.signal_conversion(self.ex_dt_right_speed, 4, 1000)  # Has to be 4 to work on vesc
+        self.can_publish(vesc.id_conversion(17, 3), temp_data, True)
+        self.can_publish(vesc.id_conversion(18, 3), temp_data, True)
 
 def main(args=None):
     print("Bus Publisher Active New")
