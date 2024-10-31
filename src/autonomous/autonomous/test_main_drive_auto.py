@@ -3,7 +3,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Joy
 from std_msgs.msg import UInt8, String
 import time
-from src.test_package.test_package.vesc import Vesc as vesc
+from test_package.vesc import Vesc as vesc
 import can
 
 class MainDriveAuto(Node):
@@ -32,8 +32,8 @@ class MainDriveAuto(Node):
 
     #Duty 0 is stop, 1-100 is forward, 101-200 is backwards. Time is in ms
     def drive_for_time(self, left_duty, right_duty, time_elapse):
-        left_data = vesc.signal_conversion(left_duty, 4, 50)
-        right_data = vesc.signal_conversion(right_duty, 4, 50)
+        left_data = vesc.signal_conversion(left_duty, 4, 500)
+        right_data = vesc.signal_conversion(right_duty, 4, 500)
         start_time = time.time()
         while((time.time() - start_time) < (time_elapse / 1000)):
             self.can_publish(vesc.id_conversion(15, 3), left_data, True)
@@ -46,11 +46,11 @@ class MainDriveAuto(Node):
             if((time.time() - start_time) > 3000):
                 break
         # publish duty cycle of 0 to stop the motors
-        stop = self.signal_conversion(0, 4, 1000)
-        self.can_publish(15, stop, True)
-        self.can_publish(16, stop, True)
-        self.can_publish(17, stop, True)
-        self.can_publish(18, stop, True)
+        stop = vesc.signal_conversion(0, 4, 1000)
+        self.can_publish(vesc.id_conversion(15, 3), stop, True)
+        self.can_publish(vesc.id_conversion(16, 3), stop, True)
+        self.can_publish(vesc.id_conversion(17, 3), stop, True)
+        self.can_publish(vesc.id_conversion(18, 3), stop, True)
         
 
     def listener_callback(self, msg):
@@ -58,7 +58,10 @@ class MainDriveAuto(Node):
         if msg.buttons[3]:
             # we are philosphers eating rice and the robot is the chopstick
             self.drive_for_time(10, 10, 2000)
-            self.drive_for_time(0, 10, 1900)
+            self.drive_for_time(0, 10, 2000)
+            self.drive_for_time(10, 10, 2000)
+            self.drive_for_time(10, 0, 2000)
+            self.drive_for_time(10, 10, 2000)
 
 def main(args=None):
     print("Main Drive Auto Mode")
