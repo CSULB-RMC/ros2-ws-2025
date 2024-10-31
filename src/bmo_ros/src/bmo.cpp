@@ -125,7 +125,7 @@ public:
         play();
       };
     subscription_ =
-      this->create_subscription<std_msgs::msg::Int32>("bmo_animation", 10, change_animation);
+      this->create_subscription<std_msgs::msg::Int32>("bmo_animation", 1, change_animation);
 
     play();
     play();
