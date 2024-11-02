@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Joy
-from std_msgs.msg import UInt8, String
+from std_msgs.msg import UInt8, String, Int32
 #ignore can import error if it's there, it works if you installed python-can
 import can
 
@@ -12,6 +12,7 @@ class DrivetrainExcavator(Node):
         super().__init__('drivetrain_ex')
         self.activity_publisher_ = self.create_publisher(String, 'ex_active', 10) 
         self.status_timer = self.create_timer(0.1, self.timer_callback)
+
 
         # create subscribers to listen for teleop computer commands
         self.ex_dt_left_sub = self.create_subscription(UInt8, 'ex_dt_left', self.ex_dt_left_update, 10)

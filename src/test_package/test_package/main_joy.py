@@ -4,7 +4,7 @@ from sensor_msgs.msg import Joy
 from cv_bridge import CvBridge
 import time
 from threading import Thread
-from std_msgs.msg import String, UInt8, Bool
+from std_msgs.msg import String, UInt8, Bool, Int32
 from can import Message, Bus
 # test
 class JoyPub_Ex(Node):
@@ -29,13 +29,14 @@ class JoyPub_Ex(Node):
 			self.listener_callback,
 			10)
         
+        self.bmo_face_ = self.create_publisher(Int32, 'bmo_animation', 10)
         self.DEADBAND = 0.05
         self.controller = 0
         self.prev = 0
         self.oldCamMsg = False
 
-        self.ex_speed_limit = 5
-        self.cb_speed_limit = 5
+        self.ex_speed_limit = 70
+        self.cb_speed_limit = 70
         
     def listener_callback(self, msg: Joy):
         if msg.buttons[8] != self.prev:
@@ -55,6 +56,21 @@ class JoyPub_Ex(Node):
             self.ex_cam_publisher_.publish(exCam)
         elif not msg.buttons[0]:
             self.oldCamMsg = False
+
+        temp = Int32()
+        if msg.buttons[0]:
+            temp.data = 0
+            self.bmo_face_.publish(temp)
+        elif msg.buttons[1]:
+            temp.data = 1
+            self.bmo_face_.publish(temp)
+        elif msg.buttons[2]:
+            temp.data = 2
+            self.bmo_face_.publish(temp)
+        elif msg.buttons[3]:
+            temp.data = 3
+            self.bmo_face_.publish(temp)
+
 
         # excavator bot
         if self.controller == 0: 
