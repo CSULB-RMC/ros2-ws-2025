@@ -72,4 +72,4 @@ Test script to launch LiDAR, uncomment RVIZ section to see visual model
 ros2 launch launch/lidar_launch.py
 ```
 
-**NOTE:** Won't work unless /dev/ttyUSB0 has full perms. For example, if on linux do `sudo chmod 777 /dev/ttyUSB0`.
+**NOTE:** Won't work unless /dev/ttyUSB0 has full perms. For example, if on linux do `sudo usermod -a -G dialout $USER` to give serial ports same permissions as user.
