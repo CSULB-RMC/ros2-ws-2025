@@ -13,6 +13,7 @@
 #include <iterator>
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
@@ -32,25 +33,23 @@ using std::placeholders::_1;
 class UnitreeLidarSDKNode : public rclcpp::Node
 {
 public:
-
   explicit UnitreeLidarSDKNode(const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
 
-  ~UnitreeLidarSDKNode(){};
+  ~UnitreeLidarSDKNode() {};
 
   void timer_callback();
 
 protected:
-
   // ROS
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_cloud_;
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr pub_imu_;
   rclcpp::TimerBase::SharedPtr timer_;
 
   // Unitree Lidar Reader
-  UnitreeLidarReader* lsdk_;
+  UnitreeLidarReader *lsdk_;
 
   // Config params
-  std::string port_; 
+  std::string port_;
 
   double rotate_yaw_bias_;
   double range_scale_;
@@ -64,16 +63,18 @@ protected:
 
   std::string imu_frame_;
   std::string imu_topic_;
+
+  PointType origin = PointType();
 };
 
 ///////////////////////////////////////////////////////////////////
 
-UnitreeLidarSDKNode::UnitreeLidarSDKNode(const rclcpp::NodeOptions& options) 
-  : Node("unitre_lidar_sdk_node", options) 
-{      
+UnitreeLidarSDKNode::UnitreeLidarSDKNode(const rclcpp::NodeOptions &options)
+    : Node("unitre_lidar_sdk_node", options)
+{
   // load config parameters
   declare_parameter<std::string>("port", "/dev/ttyUSB0");
-  
+
   declare_parameter<double>("rotate_yaw_bias", 0);
   declare_parameter<double>("range_scale", 0.001);
   declare_parameter<double>("range_bias", 0);
@@ -83,10 +84,9 @@ UnitreeLidarSDKNode::UnitreeLidarSDKNode(const rclcpp::NodeOptions& options)
   declare_parameter<std::string>("cloud_frame", "unilidar_lidar");
   declare_parameter<std::string>("cloud_topic", "unilidar/cloud");
   declare_parameter<int>("cloud_scan_num", 18);
-  
+
   declare_parameter<std::string>("imu_frame", "unilidar_imu");
   declare_parameter<std::string>("imu_topic", "unilidar/imu");
-  
 
   port_ = get_parameter("port").as_string();
 
@@ -95,23 +95,23 @@ UnitreeLidarSDKNode::UnitreeLidarSDKNode(const rclcpp::NodeOptions& options)
   range_bias_ = get_parameter("range_bias").as_double();
   range_max_ = get_parameter("range_max").as_double();
   range_min_ = get_parameter("range_min").as_double();
-  
+
   cloud_frame_ = get_parameter("cloud_frame").as_string();
   cloud_topic_ = get_parameter("cloud_topic").as_string();
   cloud_scan_num_ = get_parameter("cloud_scan_num").as_int();
-  
+
   imu_frame_ = get_parameter("imu_frame").as_string();
   imu_topic_ = get_parameter("imu_topic").as_string();
 
-  std::cout << "port_ = " << port_ 
+  std::cout << "port_ = " << port_
             << ", cloud_topic_ = " << cloud_topic_
             << ", cloud_scan_num_ = " << cloud_scan_num_
             << std::endl;
 
   // Initialize UnitreeLidarReader
   lsdk_ = createUnitreeLidarReader();
-  lsdk_->initialize(cloud_scan_num_, port_, 2000000, rotate_yaw_bias_, 
-        range_scale_, range_bias_, range_max_, range_min_);
+  lsdk_->initialize(cloud_scan_num_, port_, 2000000, rotate_yaw_bias_,
+                    range_scale_, range_bias_, range_max_, range_min_);
 
   // ROS2
   pub_cloud_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(cloud_topic_, 10);
@@ -132,7 +132,7 @@ void UnitreeLidarSDKNode::timer_callback()
 
     rclcpp::Time timestamp(
         static_cast<int32_t>(imu.stamp),
-        static_cast<uint32_t>((imu.stamp - static_cast<int32_t>(imu.stamp) ) * 1e9));
+        static_cast<uint32_t>((imu.stamp - static_cast<int32_t>(imu.stamp)) * 1e9));
 
     sensor_msgs::msg::Imu imuMsg;
     imuMsg.header.frame_id = imu_frame_;
@@ -159,12 +159,24 @@ void UnitreeLidarSDKNode::timer_callback()
     auto &cloud = lsdk_->getCloud();
     transformUnitreeCloudToPCL(cloud, cloudOut);
 
+    pcl::PointCloud<PointType> curated_data;
+
+    // ground is betweet X 0.1-0.2
+    for (const auto &point : cloudOut->points)
+    {
+      float distance = std::sqrt(pow(point.x - origin.x, 2) + pow(point.y - origin.y, 2) + pow(point.z - origin.z, 2));
+      if (distance <= 1.0)
+      {
+        curated_data.push_back(point);
+      }
+    }
     rclcpp::Time timestamp(
         static_cast<int32_t>(cloud.stamp),
-        static_cast<uint32_t>((cloud.stamp - static_cast<int32_t>(cloud.stamp) ) * 1e9));
+        static_cast<uint32_t>((cloud.stamp - static_cast<int32_t>(cloud.stamp)) * 1e9));
 
+    // LiDAR cloud data to ros2 msg
     sensor_msgs::msg::PointCloud2 cloud_msg;
-    pcl::toROSMsg(*cloudOut, cloud_msg);
+    pcl::toROSMsg(curated_data, cloud_msg);
     cloud_msg.header.frame_id = cloud_frame_;
     cloud_msg.header.stamp = timestamp;
 
