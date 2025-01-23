@@ -159,15 +159,30 @@ void UnitreeLidarSDKNode::timer_callback()
     auto &cloud = lsdk_->getCloud();
     transformUnitreeCloudToPCL(cloud, cloudOut);
 
-    pcl::PointCloud<PointType> curated_data;
+    pcl::PointCloud<PointType> ground;
+    pcl::PointCloud<PointType> holes;
+    pcl::PointCloud<PointType> obstacles;
 
     // ground is betweet X 0.1-0.2
     for (const auto &point : cloudOut->points)
     {
-      float distance = std::sqrt(pow(point.x - origin.x, 2) + pow(point.y - origin.y, 2) + pow(point.z - origin.z, 2));
-      if (distance <= 1.0)
+      // float distance = std::sqrt(pow(point.x - origin.x, 2) + pow(point.y - origin.y, 2) + pow(point.z - origin.z, 2));
+      // if (distance <= 1.0)
+      // {
+      //   curated_data.push_back(point);
+      // }
+
+      if (point.y < -0.2)
       {
-        curated_data.push_back(point);
+        holes.push_back(point);
+      }
+      else if (point.y < 0.6 && point.y > 0.2)
+      {
+        obstacles.push_back(point);
+      }
+      else if (point.y < 0.2 && point.y > -0.2)
+      {
+        ground.push_back(point);
       }
     }
     rclcpp::Time timestamp(
@@ -176,7 +191,7 @@ void UnitreeLidarSDKNode::timer_callback()
 
     // LiDAR cloud data to ros2 msg
     sensor_msgs::msg::PointCloud2 cloud_msg;
-    pcl::toROSMsg(curated_data, cloud_msg);
+    pcl::toROSMsg(ground, cloud_msg);
     cloud_msg.header.frame_id = cloud_frame_;
     cloud_msg.header.stamp = timestamp;
 
