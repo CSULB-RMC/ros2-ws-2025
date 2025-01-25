@@ -162,6 +162,7 @@ void UnitreeLidarSDKNode::timer_callback()
     pcl::PointCloud<PointType> ground;
     pcl::PointCloud<PointType> holes;
     pcl::PointCloud<PointType> obstacles;
+    pcl::PointCloud<PointType> avaliableGround;
 
     // ground is betweet X 0.1-0.2
     for (const auto &point : cloudOut->points)
@@ -185,6 +186,17 @@ void UnitreeLidarSDKNode::timer_callback()
         ground.push_back(point);
       }
     }
+
+    // for (const auto &gPoint : ground->points)
+    // {
+    //   for (const auto &obPoint : obstacles->points)
+    //   {
+    //     if (obPoint.x == gPoint.x && obPoint.z != gPoint.z)
+    //     {
+    //     }
+    //   }
+    // }
+
     rclcpp::Time timestamp(
         static_cast<int32_t>(cloud.stamp),
         static_cast<uint32_t>((cloud.stamp - static_cast<int32_t>(cloud.stamp)) * 1e9));
