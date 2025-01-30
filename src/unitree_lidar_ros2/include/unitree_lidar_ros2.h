@@ -186,17 +186,26 @@ void UnitreeLidarSDKNode::timer_callback()
         ground.push_back(point);
       }
     }
-
-    // for (const auto &gPoint : ground->points)
-    // {
-    //   for (const auto &obPoint : obstacles->points)
-    //   {
-    //     if (obPoint.x == gPoint.x && obPoint.z != gPoint.z)
-    //     {
-    //     }
-    //   }
-    // }
-
+    float min_x = 999.99;
+    float min_z = 999.99;
+    for (const auto &obPoint : obstacles)
+    {
+      if (obPoint.x < min_x && obPoint.x > 0)
+      {
+        min_x = obPoint.x;
+      }
+      if (obPoint.z < min_z && obPoint.z > 0)
+      {
+        min_z = obPoint.z;
+      }
+    }
+    for (const auto &gPoint : ground)
+    {
+      if (gPoint.x < min_x && gPoint.z < min_z)
+      {
+        avaliableGround.push_back(gPoint);
+      }
+    }
     rclcpp::Time timestamp(
         static_cast<int32_t>(cloud.stamp),
         static_cast<uint32_t>((cloud.stamp - static_cast<int32_t>(cloud.stamp)) * 1e9));
