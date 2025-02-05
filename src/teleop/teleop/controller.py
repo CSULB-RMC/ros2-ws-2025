@@ -10,17 +10,21 @@ class JoyPub(Node):
         self.dt_l_pub = self.create_publisher(UInt8, 'dt_l_pub', 10)
         self.dt_r_pub = self.create_publisher(UInt8, 'dt_r_pub', 10)
         self.subscription = self.create_subscription(Joy, 'joy', self.listener_callback, 10)
-        self.deadband = 0.05
-        self.speed_limit = 100
+        self.declare_parameters(
+            namespace='',
+            parameters=[
+                ('deadzone', None),
+                ('speed_limit', None)
+            ]
+        )
         # 100 = no speed
     def listener_callback(self, msg:Joy):
         uint8 = UInt8()
-        uint8.data = 100
         if msg.axes[1] > self.deadband:
-            uint8.data = int(msg.axes[1]*self.speed_limit + 100)
+            uint8.data = int(-msg.axes[1]*self.speed_limit + 100)
             self.dt_l_pub.publish(uint8)
         elif msg.axes[1] < -self.deadband:
-            uint8.data = int(msg.axes[1]*self.speed_limit + 100)
+            uint8.data = int(-msg.axes[1]*self.speed_limit + 100)
             self.dt_l_pub.publish(uint8)
         else:
             uint8.data = 100
