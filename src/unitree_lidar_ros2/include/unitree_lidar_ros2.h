@@ -166,47 +166,24 @@ void UnitreeLidarSDKNode::timer_callback()
     // ground is betweet X 0.1-0.2
     for (const auto &point : cloudOut->points)
     {
-      // float distance = std::sqrt(pow(point.x - origin.x, 2) + pow(point.y - origin.y, 2) + pow(point.z - origin.z, 2));
-      // if (distance <= 1.0)
-      // {
-      //   curated_data.push_back(point);
-      // }
 
-      if (point.y < 0.2 && point.y > -0.2)
+      // Leo Mapping stuff
+      if (point.z < 1 && point.x > -1 && point.x < 1)
       {
         ground.push_back(point);
       }
     }
-
-    pcl::PointCloud<PointType> normalized_ground;
-    for (const auto &point : ground.points)
-    {
-      PointType new_point = PointType(point.x, 0, point.z);
-      normalized_ground.push_back(new_point);
-    }
-
-    bool[][] availableGroundMap;
-    for (const auto &point : normalized_ground.points)
-    {
-      int x_index = (int)(point.x * 100);
-      int y_index = (int)(point.z * 100);
-      if (availableGroundMap[x_index][y_index] == false)
-      {
-        avaliableGround.push_back(point);
-        availableGroundMap[x_index][y_index] = true;
-      }
-    }
-
-    rclcpp::Time timestamp(pcl::PointCloud<PointType> obstacles;
-                           static_cast<int32_t>(cloud.stamp),
-                           static_cast<uint32_t>((cloud.stamp - static_cast<int32_t>(cloud.stamp)) * 1e9));
-
-    // LiDAR cloud data to ros2 msg
-    sensor_msgs::msg::PointCloud2 cloud_msg;
-    pcl::toROSMsg(avaliableGround, cloud_msg);
-    cloud_msg.header.frame_id = cloud_frame_;
-    cloud_msg.header.stamp = timestamp;
-
-    pub_cloud_->publish(cloud_msg);
   }
+
+  rclcpp::Time timestamp(
+      static_cast<int32_t>(cloud.stamp),
+      static_cast<uint32_t>((cloud.stamp - static_cast<int32_t>(cloud.stamp)) * 1e9));
+
+  // LiDAR cloud data to ros2 msg
+  sensor_msgs::msg::PointCloud2 cloud_msg;
+  pcl::toROSMsg(groud, cloud_msg);
+  cloud_msg.header.frame_id = cloud_frame_;
+  cloud_msg.header.stamp = timestamp;
+
+  pub_cloud_->publish(cloud_msg);
 }
