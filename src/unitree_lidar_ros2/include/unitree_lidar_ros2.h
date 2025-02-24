@@ -158,10 +158,9 @@ void UnitreeLidarSDKNode::timer_callback()
     // RCLCPP_INFO(this->get_logger(), "POINTCLOUD");
     auto &cloud = lsdk_->getCloud();
     transformUnitreeCloudToPCL(cloud, cloudOut);
-
     pcl::PointCloud<PointType> ground;
     pcl::PointCloud<PointType> holes;
-    pcl::PointCloud<PointType> obstacles;
+
     pcl::PointCloud<PointType> avaliableGround;
 
     // ground is betweet X 0.1-0.2
@@ -173,46 +172,38 @@ void UnitreeLidarSDKNode::timer_callback()
       //   curated_data.push_back(point);
       // }
 
-      if (point.y < -0.2)
-      {
-        holes.push_back(point);
-      }
-      else if (point.y < 0.6 && point.y > 0.2)
-      {
-        obstacles.push_back(point);
-      }
-      else if (point.y < 0.2 && point.y > -0.2)
+      if (point.y < 0.2 && point.y > -0.2)
       {
         ground.push_back(point);
       }
     }
-    float min_x = 999.99;
-    float min_z = 999.99;
-    for (const auto &obPoint : obstacles)
+
+    pcl::PointCloud<PointType> normalized_ground;
+    for (const auto &point : ground.points)
     {
-      if (obPoint.x < min_x && obPoint.x > 0)
+      PointType new_point = PointType(point.x, 0, point.z);
+      normalized_ground.push_back(new_point);
+    }
+
+    bool[][] availableGroundMap;
+    for (const auto &point : normalized_ground.points)
+    {
+      int x_index = (int)(point.x * 100);
+      int y_index = (int)(point.z * 100);
+      if (availableGroundMap[x_index][y_index] == false)
       {
-        min_x = obPoint.x;
-      }
-      if (obPoint.z < min_z && obPoint.z > 0)
-      {
-        min_z = obPoint.z;
+        avaliableGround.push_back(point);
+        availableGroundMap[x_index][y_index] = true;
       }
     }
-    for (const auto &gPoint : ground)
-    {
-      if (gPoint.x < min_x && gPoint.z < min_z)
-      {
-        avaliableGround.push_back(gPoint);
-      }
-    }
-    rclcpp::Time timestamp(
-        static_cast<int32_t>(cloud.stamp),
-        static_cast<uint32_t>((cloud.stamp - static_cast<int32_t>(cloud.stamp)) * 1e9));
+
+    rclcpp::Time timestamp(pcl::PointCloud<PointType> obstacles;
+                           static_cast<int32_t>(cloud.stamp),
+                           static_cast<uint32_t>((cloud.stamp - static_cast<int32_t>(cloud.stamp)) * 1e9));
 
     // LiDAR cloud data to ros2 msg
     sensor_msgs::msg::PointCloud2 cloud_msg;
-    pcl::toROSMsg(ground, cloud_msg);
+    pcl::toROSMsg(avaliableGround, cloud_msg);
     cloud_msg.header.frame_id = cloud_frame_;
     cloud_msg.header.stamp = timestamp;
 
