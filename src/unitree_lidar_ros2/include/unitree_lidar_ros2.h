@@ -173,19 +173,19 @@ void UnitreeLidarSDKNode::timer_callback()
       //   curated_data.push_back(point);
       // }
 
-      if (point.y < -0.2)
-      {
-        holes.push_back(point);
-      }
-      else if (point.y < 0.6 && point.y > 0.2)
-      {
-        obstacles.push_back(point);
-      }
-      else if (point.y < 0.2 && point.y > -0.2)
-      {
-        ground.push_back(point);
-      }
-    }
+    //   if (point.y < -0.2)
+    //   {
+    //     holes.push_back(point);
+    //   }
+    //   else if (point.y < 0.6 && point.y > 0.2)
+    //   {
+    //     obstacles.push_back(point);
+    //   }
+    //   else if (point.y < 10 && point.y > -10)
+    //   {
+    //     ground.push_back(point);
+    //   }
+    // }
 
     // for (const auto &gPoint : ground->points)
     // {
@@ -196,6 +196,13 @@ void UnitreeLidarSDKNode::timer_callback()
     //     }
     //   }
     // }
+
+      // Leo Mapping stuff
+      if (point.z < 1 && point.x > -1 && point.x < 1)
+      {
+        ground.push_back(point);
+      }
+    }
 
     rclcpp::Time timestamp(
         static_cast<int32_t>(cloud.stamp),
