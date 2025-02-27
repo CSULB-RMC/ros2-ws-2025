@@ -9,6 +9,7 @@ class JoyPub(Node):
         super().__init__('controller_publisher')
         self.dt_l_pub = self.create_publisher(UInt8, 'dt_l_pub', 10)
         self.dt_r_pub = self.create_publisher(UInt8, 'dt_r_pub', 10)
+        self.ex_1_pub = self.create_publisher(UInt8, 'dt_r_pub', 10)
         self.subscription = self.create_subscription(Joy, 'joy', self.listener_callback, 10)
         self.declare_parameters(
             namespace='',
@@ -40,6 +41,10 @@ class JoyPub(Node):
             uint8.data = 100
             self.dt_r_pub.publish(uint8)
 
+        if msg.button[5] == 1:
+            uint8.data = 10
+            self.ex_1_pub.publish(uint8)
+        
 def main():
     print("Controller On")
     rclpy.init(args=None)
