@@ -18,6 +18,7 @@ class JoyPub(Node):
                 ('speed_limit', None)
             ]
         )
+        self.descendSpeed = 0
         # 100 = no speed
     def listener_callback(self, msg:Joy):
         uint8 = UInt8()
@@ -41,8 +42,10 @@ class JoyPub(Node):
             uint8.data = 100
             self.dt_r_pub.publish(uint8)
 
+        # Excavation Stage 2 Button
         if msg.buttons[7] == 1:
-            uint8.data = 30
+            self.descendSpeed = 30  #placeholder
+            uint8.data = self.descendSpeed
             self.ex_2_pub.publish(uint8)
 
 def main():
