@@ -24,7 +24,9 @@ setup(
             'mini_joy = test_package.mini_joy:main',
             'mini_drive = test_package.mini_drive:main',
             'main_joy = test_package.main_joy:main',
-            'main_drive = test_package.main_drive:main'
+            'main_drive = test_package.main_drive:main',
+            'camera_pub = test_package.camera_pub:main',
+            'camera_sub = test_package.camera_sub:main'
         ],
     },
 )
