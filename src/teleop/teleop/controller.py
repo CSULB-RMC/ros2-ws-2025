@@ -9,6 +9,7 @@ class JoyPub(Node):
         super().__init__('controller_publisher')
         self.dt_l_pub = self.create_publisher(UInt8, 'dt_l_pub', 10)
         self.dt_r_pub = self.create_publisher(UInt8, 'dt_r_pub', 10)
+        self.trap = self.create_publisher(UInt8, 'trap', 10)
         self.subscription = self.create_subscription(Joy, 'joy', self.listener_callback, 10)
         self.declare_parameters(
             namespace='',
@@ -39,6 +40,35 @@ class JoyPub(Node):
         else:
             uint8.data = 100
             self.dt_r_pub.publish(uint8)
+
+        if msg.buttons[0] == 1:
+            uint8.data = 100    
+            self.trap.publish(uint8)
+            
+        if msg.buttons[1] == 1:  
+            pass
+
+        if msg.buttons[2] == 1:  
+            pass
+
+
+        if msg.buttons[3] == 1:  
+            pass
+        
+
+        uint8.data = self.bucketSpeed
+        self.dig_pub.publish(uint8)
+
+        if buttons[4] == 1: #digging High (Left bumper) 
+            if (self.bucketSpeed != 0):
+                self.bucketSpeed -= 10
+                uint8.data = self.bucketSpeed
+            self.dig_pub.publish(uint8)
+        
+        if msg.buttons[6] == 1: #digginh low  (Left trigger)
+            self.bucketSpeed += 10
+            uint8.data = self.bucketSpeed
+            self.dig_pub.publish(uint8)
 
 def main():
     print("Controller On")
