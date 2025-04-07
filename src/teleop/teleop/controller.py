@@ -10,7 +10,13 @@ class JoyPub(Node):
         self.dt_l_pub = self.create_publisher(UInt8, 'dt_l_pub', 10)
         self.dt_r_pub = self.create_publisher(UInt8, 'dt_r_pub', 10)
         self.trap = self.create_publisher(UInt8, 'trap', 10)
+        self.ex_2_pub = self.create_publisher(UInt8, 'ex_2_pub', 10)
+        self.ex_1_pub = self.create_publisher(UInt8, 'ex_1_pub', 10)
+        self.dig_pub = self.create_publisher(UInt8, 'dig_pub', 10)
         self.subscription = self.create_subscription(Joy, 'joy', self.listener_callback, 10)
+        self.bucketSpeed = 0
+        self.liftspeed = 0
+
         self.declare_parameters(
             namespace='',
             parameters=[
@@ -18,6 +24,7 @@ class JoyPub(Node):
                 ('speed_limit', None)
             ]
         )
+        self.descendSpeed = 0
         # 100 = no speed
     def listener_callback(self, msg:Joy):
         uint8 = UInt8()
@@ -27,7 +34,7 @@ class JoyPub(Node):
         elif msg.axes[1] < -self.deadband:
             uint8.data = int(-msg.axes[1]*self.speed_limit + 100)
             self.dt_l_pub.publish(uint8)
-        else:
+        else: 
             uint8.data = 100
             self.dt_l_pub.publish(uint8)
 
@@ -44,32 +51,43 @@ class JoyPub(Node):
         if msg.buttons[0] == 1:
             uint8.data = 100    
             self.trap.publish(uint8)
+        else:
+            uint8.data = 0
+            self.trap.publish(uint0)
             
         if msg.buttons[1] == 1:  
             pass
 
         if msg.buttons[2] == 1:  
             pass
-
-
+          
         if msg.buttons[3] == 1:  
             pass
+            
+        #Button 5 (right bumper)
+        if msg.button[5] == 1:
+            self.liftspeed += 10
+            uint8.data = self.liftspeed
+            self.ex_1_pub.publish(uint8)
         
+        # Excavation Stage 2 Button (right trigger)
+        if msg.buttons[7] == 1:
+            self.descendSpeed = 30  #placeholder
+            uint8.data = self.descendSpeed
+            self.ex_2_pub.publish(uint8)
 
-        uint8.data = self.bucketSpeed
-        self.dig_pub.publish(uint8)
-
-        if buttons[4] == 1: #digging High (Left bumper) 
+        # i don't know if this is correct?
+        if msg.buttons[4] == 1: #digging High (Left bumper) 
             if (self.bucketSpeed != 0):
                 self.bucketSpeed -= 10
                 uint8.data = self.bucketSpeed
             self.dig_pub.publish(uint8)
-        
+    
         if msg.buttons[6] == 1: #digginh low  (Left trigger)
             self.bucketSpeed += 10
             uint8.data = self.bucketSpeed
             self.dig_pub.publish(uint8)
-
+        
 def main():
     print("Controller On")
     rclpy.init(args=None)
