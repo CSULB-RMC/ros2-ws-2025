@@ -1,4 +1,5 @@
 import rclpy
+import time
 from rclpy.node import Node
 from sensor_msgs.msg import Joy
 from std_msgs.msg import UInt8
@@ -39,6 +40,7 @@ class JoyPub(Node):
             Joy, "joy", self.listener_callback, 10
         )
 
+        self.off = False
         self.bucketSpeed = 0
         self.liftspeed = 0
         self.descendSpeed = 0
@@ -46,31 +48,54 @@ class JoyPub(Node):
         self.speed_limit = self.get_parameter("speed_limit").value
 
     def listener_callback(self, msg: Joy):
+        if self.off:
+           return 
         uint8 = UInt8()
+        # the (back) button turns the whole machine off
+        if msg.buttons[8] == 1:
+            self.off = True
+            uint8.data = 0
+            self.dig_pub.publish(uint8)
+
+            self.ex_1_pub.publish(uint8)
+            
+            self.ex_2_pub.publish(uint8)
+
+            uint8.data = 100
+
+            self.dt_l_pub.publish(uint8)
+            self.dt_r_pub.publish(uint8)
+        
+
+        exec = False
         if msg.axes[1] > self.deadband:
+            exec = True
             uint8.data = int(-msg.axes[1] * self.speed_limit + 100)
             self.dt_l_pub.publish(uint8)
         elif msg.axes[1] < -self.deadband:
+            exec = True
             uint8.data = int(-msg.axes[1] * self.speed_limit + 100)
             self.dt_l_pub.publish(uint8)
-        else:
+        elif not exec:
             uint8.data = 100
             self.dt_l_pub.publish(uint8)
-
+        exec = False
         if msg.axes[3] > self.deadband:
+            exec = True
             uint8.data = int(msg.axes[3] * self.speed_limit + 100)
             self.dt_r_pub.publish(uint8)
         elif msg.axes[3] < -self.deadband:
+            exec = True
             uint8.data = int(msg.axes[3] * self.speed_limit + 100)
             self.dt_r_pub.publish(uint8)
-        else:
+        elif not exec:
             uint8.data = 100
             self.dt_r_pub.publish(uint8)
 
         if msg.buttons[0] == 1:
             uint8.data = 100
             self.trap.publish(uint8)
-        else:
+        elif msg.buttons[0] == 0:
             uint8.data = 0
             self.trap.publish(uint8)
 
@@ -85,21 +110,24 @@ class JoyPub(Node):
 
         # i don't know if this is correct?
         if msg.buttons[4] == 1:  # digging High (Left bumper)
-            if self.bucketSpeed != 0:
+            if self.bucketSpeed >= 10:
                 self.bucketSpeed -= 10
                 uint8.data = self.bucketSpeed
-            self.dig_pub.publish(uint8)
+                self.dig_pub.publish(uint8)
+            time.sleep(0.5)
 
         # Button 5 (right bumper)
         if msg.buttons[5] == 1:
             self.liftspeed += 10
             uint8.data = self.liftspeed
             self.ex_1_pub.publish(uint8)
+            time.sleep(1)
 
         if msg.buttons[6] == 1:  # diggin low  (Left trigger)
             self.bucketSpeed += 10
             uint8.data = self.bucketSpeed
             self.dig_pub.publish(uint8)
+            time.sleep(0.8)
 
         # Excavation Stage 2 Button (right trigger)
         if msg.buttons[7] == 1:
