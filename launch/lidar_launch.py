@@ -18,8 +18,8 @@ def generate_launch_description():
               {'range_bias': 0.0},
               {'range_max': 50.0},
               {'range_min': 0.0},
-              {'cloud_frame': "unilidar_lidar"},
-              {'cloud_topic': "unilidar/cloud"},
+              {'cloud_frame': "map"},
+              {'cloud_topic': "/velodyne_points"},
               {'cloud_scan_num': 10}, # time between scans
               {'imu_frame': "unilidar_imu"},
               {'imu_topic': "unilidar/imu"}]
@@ -36,6 +36,6 @@ def generate_launch_description():
     arguments=['-d', rviz_config_file],
     output='log'
   )
-  return LaunchDescription([node1, rviz_node])
+  # return LaunchDescription([node1, rviz_node])
 
-  # return LaunchDescription([rviz_node])
+  return LaunchDescription([node1])

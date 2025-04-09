@@ -159,7 +159,7 @@ void UnitreeLidarSDKNode::timer_callback()
     auto &cloud = lsdk_->getCloud();
     transformUnitreeCloudToPCL(cloud, cloudOut);
     pcl::PointCloud<PointType> ground;
-    pcl::PointCloud<PointType> holes;
+    pcl::PointCloud<PointType> all_points;
 
     pcl::PointCloud<PointType> avaliableGround;
 
@@ -172,18 +172,19 @@ void UnitreeLidarSDKNode::timer_callback()
       {
         ground.push_back(point);
       }
+      all_points.push_back(point);
     }
+
+    rclcpp::Time timestamp(
+        static_cast<int32_t>(cloud.stamp),
+        static_cast<uint32_t>((cloud.stamp - static_cast<int32_t>(cloud.stamp)) * 1e9));
+
+    // LiDAR cloud data to ros2 msg
+    sensor_msgs::msg::PointCloud2 cloud_msg;
+    pcl::toROSMsg(all_points, cloud_msg);
+    cloud_msg.header.frame_id = cloud_frame_;
+    cloud_msg.header.stamp = timestamp;
+
+    pub_cloud_->publish(cloud_msg);
   }
-
-  rclcpp::Time timestamp(
-      static_cast<int32_t>(cloud.stamp),
-      static_cast<uint32_t>((cloud.stamp - static_cast<int32_t>(cloud.stamp)) * 1e9));
-
-  // LiDAR cloud data to ros2 msg
-  sensor_msgs::msg::PointCloud2 cloud_msg;
-  pcl::toROSMsg(groud, cloud_msg);
-  cloud_msg.header.frame_id = cloud_frame_;
-  cloud_msg.header.stamp = timestamp;
-
-  pub_cloud_->publish(cloud_msg);
 }
