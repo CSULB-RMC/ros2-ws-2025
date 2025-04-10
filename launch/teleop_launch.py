@@ -34,6 +34,7 @@ def generate_launch_description():
     controllerNode = Node(
         package="teleop",
         executable="controller",
+        name="controller",
         parameters=[controllerConfig],
     )
     ld.add_action(joyNode)
