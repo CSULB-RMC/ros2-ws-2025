@@ -12,7 +12,7 @@ class motor_controller(Node):
         super().__init__('motor_controller')
         # can bus yipie (switch channel name to 'vcan0' for virtual can testing)
         self.bus = can.interface.Bus(interface='socketcan', channel='vcan0', bitrate='500000')
-        topic_list = {'dt_l_pub', 'dt_r_pub', 'dig_pub'}
+        topic_list = {'dt_l_pub', 'dt_r_pub', 'dig_pub', 'ex_2_pub'}
         for topic in topic_list:
              self.create_subscription(
                   UInt8, 
@@ -37,6 +37,9 @@ class motor_controller(Node):
         # STMs
         elif topic == 'dig_pub':
             Vesc.can_publish(Vesc.id_conversion(30, 0), Vesc.signal_conversion(msg.data, 4, 1), True)
+
+        elif topic == 'ex_2_pub':
+            Vesc.can_publish(31, Vesc.signal_conversion(msg.data, 4, 1), True)
 
 def main(args=None):
         rclpy.init(args=args)
