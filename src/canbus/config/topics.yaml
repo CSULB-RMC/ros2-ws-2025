@@ -1,0 +1,4 @@
+---
+motor_controller:
+  ros__parameters:
+    ros_topics: [ 'dt_l_pub', 'dt_r_pub', 'trap', 'ex_2_pub', 'ex_1_pub', 'dig_pub' ]
