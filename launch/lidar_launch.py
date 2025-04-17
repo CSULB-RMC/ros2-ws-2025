@@ -19,10 +19,10 @@ def generate_launch_description():
               {'range_max': 50.0},
               {'range_min': 0.0},
               {'cloud_frame': "map"},
-              {'cloud_topic': "/velodyne_points"},
+              {'cloud_topic': "lidar_topic"},
               {'cloud_scan_num': 10}, # time between scans
               {'imu_frame': "unilidar_imu"},
-              {'imu_topic': "unilidar/imu"}]
+              {'imu_topic': "imu_topic"}]
   )
 
   # # Run Rviz

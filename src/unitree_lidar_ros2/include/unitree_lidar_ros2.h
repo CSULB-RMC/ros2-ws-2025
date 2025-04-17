@@ -158,20 +158,11 @@ void UnitreeLidarSDKNode::timer_callback()
     // RCLCPP_INFO(this->get_logger(), "POINTCLOUD");
     auto &cloud = lsdk_->getCloud();
     transformUnitreeCloudToPCL(cloud, cloudOut);
-    pcl::PointCloud<PointType> ground;
     pcl::PointCloud<PointType> all_points;
-
-    pcl::PointCloud<PointType> avaliableGround;
 
     // ground is betweet X 0.1-0.2
     for (const auto &point : cloudOut->points)
     {
-
-      // Leo Mapping stuff
-      if (point.z < 1 && point.x > -1 && point.x < 1)
-      {
-        ground.push_back(point);
-      }
       all_points.push_back(point);
     }
 

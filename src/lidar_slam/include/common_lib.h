@@ -5,10 +5,11 @@
 #include <Eigen/Eigen>
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
-#include <sensor_msgs/msg/imu.h>
+#include <sensor_msgs/msg/imu.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_eigen/tf2_eigen.hpp>
+
 using namespace std;
 using namespace Eigen;
 
@@ -62,10 +63,10 @@ struct MeasureGroup // Lidar data and imu dates for the curent process
         this->lidar.reset(new PointCloudXYZI());
     };
 
-    double lidar_beg_time;                 // 点云起始时间戳
-    double lidar_last_time;                // 点云结束时间戳，即最后一个点的时间戳
-    PointCloudXYZI::Ptr lidar;             // 当前帧点云
-    deque<sensor_msgs::Imu::ConstPtr> imu; // IMU队列
+    double lidar_beg_time;                       // 点云起始时间戳
+    double lidar_last_time;                      // 点云结束时间戳，即最后一个点的时间戳
+    PointCloudXYZI::Ptr lidar;                   // 当前帧点云
+    deque<sensor_msgs::msg::Imu::SharedPtr> imu; // IMU队列
 };
 
 template <typename T>

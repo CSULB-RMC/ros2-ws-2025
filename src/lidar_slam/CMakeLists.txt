@@ -74,6 +74,8 @@ include/ikd-Tree/ikd_Tree.cpp
   src/Estimator.cpp
 )
 
+add_compile_definitions(ROOT_DIR="./")
+
 ament_target_dependencies(pointlio_mapping
   rclcpp
   tf2_eigen
@@ -90,5 +92,11 @@ ament_target_dependencies(pointlio_mapping
 install(TARGETS
     pointlio_mapping
   DESTINATION lib/${PROJECT_NAME})
+
+# Install launch files.
+# install(DIRECTORY
+#   launch
+#   DESTINATION share/${PROJECT_NAME}/
+# )
 
 ament_package()
