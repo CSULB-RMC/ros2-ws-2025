@@ -2,4 +2,7 @@
 controller:
   ros__parameters:
     deadband: 0.05
-    speed_limit: 100
+    speed_limit: 10
+    bucket_speed_limit: 10
+    lift_speed_limit: 10
+    descend_speed_limit: 10

@@ -22,6 +22,10 @@ setup(
     license="Apache-2.0",
     tests_require=["pytest"],
     entry_points={
-        "console_scripts": ["controller = teleop.controller:main"],
+        "console_scripts": [
+            "controller = teleop.controller:main",
+            "state_server = teleop.state_publisher:main",
+            "dig = teleop.dig_control:main",
+        ],
     },
 )
