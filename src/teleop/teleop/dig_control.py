@@ -1,33 +1,46 @@
 import rclpy
-from rclpy.action import ActionClient
-from rclpy.node import Node
-
-from action_interfaces.action import State
-
-
-class FibonacciActionClient(Node):
-
-    def __init__(self):
-        super().__init__("fibonacci_action_client")
-        self._action_client = ActionClient(self, State, "fibonacci")
-
-    def send_goal(self, order):
-        goal_msg = State.Goal()
-        goal_msg.order = order
-
-        self._action_client.wait_for_server()
-
-        return self._action_client.send_goal_async(goal_msg)
+import time
+from rclpy.node import Node, Publisher
+from sensor_msgs.msg import Joy
+from std_msgs.msg import UInt8
+from .controls_lib import negativeNumberHandler, pubDelay
 
 
-def main(args=None):
-    rclpy.init(args=args)
+class BucketController(Node):
+    def __init__(self, bucketSpeedLimit):
+        super().__init__("dig_publisher")
+        self.declare_parameter("bucket_speed_limit", bucketSpeedLimit)
+        self.dig_pub = self.create_publisher(UInt8, "dig_pub", 10)
 
-    action_client = FibonacciActionClient()
+        self.bucketSpeedLimit = self.get_parameter("bucket_speed_limit").value
+        self.bucketSpeed = 0
 
-    future = action_client.send_goal(10)
+    def dig(self, msg):
+        uint8 = UInt8()
 
-    rclpy.spin_until_future_complete(action_client, future)
+        # i don't know if this is correct?
+        if msg.buttons[3] == 1:
+            self.bucketSpeed = 10
+            uint8.data = self.bucketSpeed
+            pubDelay(self.dig_pub, uint8, 0.5)
+        elif msg.buttons[3] == 0:
+            self.bucketSpeed = 0
+            uint8.data = self.bucketSpeed
+            pubDelay(self.dig_pub, uint8, 0.5)
+
+    def listener_callback(self, msg: Joy):
+        self.bucket(msg)
+
+
+def main():
+    print("Controller On")
+    rclpy.init(args=None)
+
+    node = BucketController()
+    rclpy.spin(node)
+
+    node.destroy_node()
+    rclpy.shutdown()
 
 
 if __name__ == "__main__":
