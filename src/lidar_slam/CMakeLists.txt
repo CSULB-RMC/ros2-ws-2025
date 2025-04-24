@@ -103,11 +103,11 @@ ament_target_dependencies(pointlio_mapping
 install(TARGETS
     pointlio_mapping
   DESTINATION lib/${PROJECT_NAME})
+add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
-# Install launch files.
-# install(DIRECTORY
-#   launch
-#   DESTINATION share/${PROJECT_NAME}/
-# )
+install(DIRECTORY
+  config
+  DESTINATION share/${PROJECT_NAME}/
+)
 
 ament_package()

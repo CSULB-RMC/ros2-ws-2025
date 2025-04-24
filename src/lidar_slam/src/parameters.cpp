@@ -121,7 +121,7 @@ void readParameters(std::shared_ptr<rclcpp::Node> node)
   imu_meas_acc_cov = node->declare_parameter<double>("mapping/imu_meas_acc_cov", 0.1);
   imu_meas_omg_cov = node->declare_parameter<double>("mapping/imu_meas_omg_cov", 0.1);
   p_pre->blind = node->declare_parameter<double>("preprocess/blind", 1.0);
-  lidar_type = node->declare_parameter<int>("preprocess/lidar_type", 1);
+  lidar_type = node->declare_parameter<int>("preprocess/lidar_type", 5);
   p_pre->N_SCANS = node->declare_parameter<int>("preprocess/scan_line", 16);
   p_pre->SCAN_RATE = node->declare_parameter<int>("preprocess/scan_rate", 10);
   p_pre->time_unit = node->declare_parameter<int>("preprocess/timestamp_unit", 1);
