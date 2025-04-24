@@ -98,7 +98,7 @@ nav_msgs::msg::Path path;
 nav_msgs::msg::Odometry odomAftMapped;
 geometry_msgs::msg::PoseStamped msg_body_pose;
 
-class LaserMappingNode : public rclcpp::Node, public std::enable_shared_from_this<LaserMappingNode>
+class LaserMappingNode : public rclcpp::Node
 {
 public:
     LaserMappingNode() : Node("laser_mapping")
@@ -132,9 +132,98 @@ public:
 
         rclcpp::TimerBase::SharedPtr timer_;
         // Initialize other variables and start the main loop
-        this->init();
+        // this->init();
         timer_ = this->create_wall_timer(
             std::chrono::milliseconds(1), std::bind(&LaserMappingNode::loop, this));
+    }
+    void init()
+    {
+        readParameters(shared_from_this());
+        cout << "lidar_type: " << lidar_type << endl;
+
+        // path.header.stamp = rclcpp::Time().fromSec(lidar_end_time);
+        path.header.stamp = rclcpp::Time(lidar_end_time);
+        path.header.frame_id = "camera_init";
+
+        std::time_t startTime, endTime;
+
+        double FOV_DEG = (fov_deg + 10.0) > 179.9 ? 179.9 : (fov_deg + 10.0);
+        double HALF_FOV_COS = cos((FOV_DEG) * 0.5 * PI_M / 180.0);
+
+        memset(point_selected_surf, true, sizeof(point_selected_surf));
+
+        downSizeFilterSurf.setLeafSize(filter_size_surf_min, filter_size_surf_min, filter_size_surf_min);
+        downSizeFilterMap.setLeafSize(filter_size_map_min, filter_size_map_min, filter_size_map_min);
+
+        Lidar_T_wrt_IMU << VEC_FROM_ARRAY(extrinT);
+        Lidar_R_wrt_IMU << MAT_FROM_ARRAY(extrinR);
+
+        if (extrinsic_est_en)
+        {
+
+            if (!use_imu_as_input)
+            {
+                kf_output.x_.offset_R_L_I = Lidar_R_wrt_IMU;
+                kf_output.x_.offset_T_L_I = Lidar_T_wrt_IMU;
+            }
+
+            else
+            {
+                kf_input.x_.offset_R_L_I = Lidar_R_wrt_IMU;
+                kf_input.x_.offset_T_L_I = Lidar_T_wrt_IMU;
+            }
+        }
+
+        p_imu->lidar_type = p_pre->lidar_type = lidar_type;
+        p_imu->imu_en = imu_en;
+
+        kf_input.init_dyn_share_modified(get_f_input, df_dx_input, h_model_input);
+        kf_output.init_dyn_share_modified_2h(get_f_output, df_dx_output, h_model_output, h_model_IMU_output);
+
+        Eigen::Matrix<double, 24, 24> P_init = MD(24, 24)::Identity() * 0.01;
+        P_init.block<3, 3>(21, 21) = MD(3, 3)::Identity() * 0.0001;
+        P_init.block<6, 6>(15, 15) = MD(6, 6)::Identity() * 0.001;
+        P_init.block<6, 6>(6, 6) = MD(6, 6)::Identity() * 0.0001;
+        kf_input.change_P(P_init);
+
+        Eigen::Matrix<double, 30, 30> P_init_output = MD(30, 30)::Identity() * 0.01;
+        P_init_output.block<3, 3>(21, 21) = MD(3, 3)::Identity() * 0.0001;
+        P_init_output.block<6, 6>(6, 6) = MD(6, 6)::Identity() * 0.0001;
+        P_init_output.block<6, 6>(24, 24) = MD(6, 6)::Identity() * 0.001;
+        kf_input.change_P(P_init);
+        kf_output.change_P(P_init_output);
+
+        Eigen::Matrix<double, 24, 24> Q_input = process_noise_cov_input();
+        Eigen::Matrix<double, 30, 30> Q_output = process_noise_cov_output();
+
+        /*** debug record ***/
+        string pos_log_dir = root_dir + "/Log/pos_log.txt";
+        fp = fopen(pos_log_dir.c_str(), "w");
+
+        fout_out.open(DEBUG_FILE_DIR("mat_out.txt"), ios::out);
+        fout_imu_pbp.open(DEBUG_FILE_DIR("imu_pbp.txt"), ios::out);
+        if (fout_out && fout_imu_pbp)
+            cout << "~~~~" << ROOT_DIR << " file opened" << endl;
+        else
+            cout << "~~~~" << ROOT_DIR << " doesn't exist" << endl;
+
+        signal(SIGINT, LaserMappingNode::SigHandle);
+
+        /* 1. make sure you have enough memories
+        /* 2. noted that pcd save will influence the real-time performences **/
+
+        if (pcl_wait_save->size() > 0 && pcd_save_en)
+        {
+            string file_name = string("scans.pcd");
+            string all_points_dir(string(string(ROOT_DIR) + "PCD/") + file_name);
+            std::cout << "Saving map to file: " << all_points_dir << std::endl;
+            pcl::PCDWriter pcd_writer;
+            pcd_writer.writeBinary(all_points_dir, *pcl_wait_save);
+        }
+        fout_out.close();
+        fout_imu_pbp.close();
+
+        // Other member variables
     }
 
 private:
@@ -1384,101 +1473,13 @@ private:
 
         rate.sleep();
     }
-    void init()
-    {
-        readParameters(std::enable_shared_from_this<LaserMappingNode>::shared_from_this());
-        cout << "lidar_type: " << lidar_type << endl;
-
-        // path.header.stamp = rclcpp::Time().fromSec(lidar_end_time);
-        path.header.stamp = rclcpp::Time(lidar_end_time);
-        path.header.frame_id = "camera_init";
-
-        std::time_t startTime, endTime;
-
-        double FOV_DEG = (fov_deg + 10.0) > 179.9 ? 179.9 : (fov_deg + 10.0);
-        double HALF_FOV_COS = cos((FOV_DEG) * 0.5 * PI_M / 180.0);
-
-        memset(point_selected_surf, true, sizeof(point_selected_surf));
-
-        downSizeFilterSurf.setLeafSize(filter_size_surf_min, filter_size_surf_min, filter_size_surf_min);
-        downSizeFilterMap.setLeafSize(filter_size_map_min, filter_size_map_min, filter_size_map_min);
-
-        RCLCPP_INFO(this->get_logger(), "Lidar Mapping Node Initialized");
-        Lidar_T_wrt_IMU << VEC_FROM_ARRAY(extrinT);
-        Lidar_R_wrt_IMU << MAT_FROM_ARRAY(extrinR);
-
-        if (extrinsic_est_en)
-        {
-
-            if (!use_imu_as_input)
-            {
-                kf_output.x_.offset_R_L_I = Lidar_R_wrt_IMU;
-                kf_output.x_.offset_T_L_I = Lidar_T_wrt_IMU;
-            }
-
-            else
-            {
-                kf_input.x_.offset_R_L_I = Lidar_R_wrt_IMU;
-                kf_input.x_.offset_T_L_I = Lidar_T_wrt_IMU;
-            }
-        }
-
-        p_imu->lidar_type = p_pre->lidar_type = lidar_type;
-        p_imu->imu_en = imu_en;
-
-        kf_input.init_dyn_share_modified(get_f_input, df_dx_input, h_model_input);
-        kf_output.init_dyn_share_modified_2h(get_f_output, df_dx_output, h_model_output, h_model_IMU_output);
-
-        Eigen::Matrix<double, 24, 24> P_init = MD(24, 24)::Identity() * 0.01;
-        P_init.block<3, 3>(21, 21) = MD(3, 3)::Identity() * 0.0001;
-        P_init.block<6, 6>(15, 15) = MD(6, 6)::Identity() * 0.001;
-        P_init.block<6, 6>(6, 6) = MD(6, 6)::Identity() * 0.0001;
-        kf_input.change_P(P_init);
-
-        Eigen::Matrix<double, 30, 30> P_init_output = MD(30, 30)::Identity() * 0.01;
-        P_init_output.block<3, 3>(21, 21) = MD(3, 3)::Identity() * 0.0001;
-        P_init_output.block<6, 6>(6, 6) = MD(6, 6)::Identity() * 0.0001;
-        P_init_output.block<6, 6>(24, 24) = MD(6, 6)::Identity() * 0.001;
-        kf_input.change_P(P_init);
-        kf_output.change_P(P_init_output);
-
-        Eigen::Matrix<double, 24, 24> Q_input = process_noise_cov_input();
-        Eigen::Matrix<double, 30, 30> Q_output = process_noise_cov_output();
-
-        /*** debug record ***/
-        string pos_log_dir = root_dir + "/Log/pos_log.txt";
-        fp = fopen(pos_log_dir.c_str(), "w");
-
-        fout_out.open(DEBUG_FILE_DIR("mat_out.txt"), ios::out);
-        fout_imu_pbp.open(DEBUG_FILE_DIR("imu_pbp.txt"), ios::out);
-        if (fout_out && fout_imu_pbp)
-            cout << "~~~~" << ROOT_DIR << " file opened" << endl;
-        else
-            cout << "~~~~" << ROOT_DIR << " doesn't exist" << endl;
-
-        signal(SIGINT, LaserMappingNode::SigHandle);
-
-        /* 1. make sure you have enough memories
-        /* 2. noted that pcd save will influence the real-time performences **/
-
-        if (pcl_wait_save->size() > 0 && pcd_save_en)
-        {
-            string file_name = string("scans.pcd");
-            string all_points_dir(string(string(ROOT_DIR) + "PCD/") + file_name);
-            std::cout << "Saving map to file: " << all_points_dir << std::endl;
-            pcl::PCDWriter pcd_writer;
-            pcd_writer.writeBinary(all_points_dir, *pcl_wait_save);
-        }
-        fout_out.close();
-        fout_imu_pbp.close();
-
-        // Other member variables
-    }
 };
 int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<LaserMappingNode>());
+    auto node = std::make_shared<LaserMappingNode>();
+    node->init(); // <-- move this here
+    rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;
 }
