@@ -77,7 +77,7 @@ link_directories(
   ../unitree_lidar_sdk/lib/${CMAKE_SYSTEM_PROCESSOR}
 )
 
-add_executable(pointlio_mapping 
+add_executable(laser_mapping 
 src/laserMapping.cpp 
 include/ikd-Tree/ikd_Tree.cpp 
   src/parameters.cpp 
@@ -87,7 +87,7 @@ include/ikd-Tree/ikd_Tree.cpp
 
 add_compile_definitions(ROOT_DIR="./")
 
-ament_target_dependencies(pointlio_mapping
+ament_target_dependencies(laser_mapping
   rclcpp
   tf2_eigen
   visualization_msgs  
@@ -101,7 +101,7 @@ ament_target_dependencies(pointlio_mapping
   rcpputils  
 )
 install(TARGETS
-    pointlio_mapping
+    laser_mapping
   DESTINATION lib/${PROJECT_NAME})
 add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 

@@ -13,12 +13,10 @@ def generate_launch_description():
 
     lidarNode = Node(
         package="lidar_slam",
-        name="laserMapping",
-        executable="pointlio_mapping",
+        name="laser_mapping",
+        executable="laser_mapping",
         output="screen",
-        parameters=[
-            config,
-        ],
+        parameters=[config],
     )
     rviz = Node(
         package="rviz2",

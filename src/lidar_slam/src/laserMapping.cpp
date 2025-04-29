@@ -103,8 +103,6 @@ class LaserMappingNode : public rclcpp::Node
 public:
     LaserMappingNode() : Node("laser_mapping")
     {
-        // this->declare_parameter("lidar_type", 1);
-        // this->get_parameter("lidar_type", lidar_type);
 
         pubLaserCloudFullRes = this->create_publisher<sensor_msgs::msg::PointCloud2>("/pointlio/cloud_registered", 100000);
         pubLaserCloudFullRes_body = this->create_publisher<sensor_msgs::msg::PointCloud2>("/pointlio/cloud_registered_body", 100000);
@@ -113,12 +111,6 @@ public:
         pubOdomAftMapped = this->create_publisher<nav_msgs::msg::Odometry>("/pointlio/odom", 100000);
         pubPath = this->create_publisher<nav_msgs::msg::Path>("/pointlio/path", 100000);
         plane_pub = this->create_publisher<visualization_msgs::msg::Marker>("/pointlio/planner_normal", 1000);
-
-        sub_pcl = this->create_subscription<sensor_msgs::msg::PointCloud2>(
-            "/unilidar/cloud", 200000, std::bind(&LaserMappingNode::standard_pcl_cbk, this, std::placeholders::_1));
-        sub_imu = this->create_subscription<sensor_msgs::msg::Imu>(
-            "/unilidar/imu", 200000, std::bind(&LaserMappingNode::imu_cbk, this, std::placeholders::_1));
-
         tf_broadcaster = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 
         // rclpy.init()
@@ -139,18 +131,19 @@ public:
     void init()
     {
         readParameters(shared_from_this());
-        cout << "lidar_type: " << lidar_type << endl;
+        this->get_parameter("preprocess/lidar_type", lidar_type);
+        RCLCPP_INFO(this->get_logger(), "Lidar Type: %d", lidar_type);
+        sub_pcl = this->create_subscription<sensor_msgs::msg::PointCloud2>(
+            lid_topic, 200000, std::bind(&LaserMappingNode::standard_pcl_cbk, this, std::placeholders::_1));
+
+        sub_imu = this->create_subscription<sensor_msgs::msg::Imu>(
+            imu_topic, 200000, std::bind(&LaserMappingNode::imu_cbk, this, std::placeholders::_1));
 
         // path.header.stamp = rclcpp::Time().fromSec(lidar_end_time);
         path.header.stamp = rclcpp::Time(lidar_end_time);
         path.header.frame_id = "camera_init";
 
         std::time_t startTime, endTime;
-
-        double FOV_DEG = (fov_deg + 10.0) > 179.9 ? 179.9 : (fov_deg + 10.0);
-        double HALF_FOV_COS = cos((FOV_DEG) * 0.5 * PI_M / 180.0);
-
-        memset(point_selected_surf, true, sizeof(point_selected_surf));
 
         downSizeFilterSurf.setLeafSize(filter_size_surf_min, filter_size_surf_min, filter_size_surf_min);
         downSizeFilterMap.setLeafSize(filter_size_map_min, filter_size_map_min, filter_size_map_min);
