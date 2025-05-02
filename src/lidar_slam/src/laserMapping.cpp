@@ -1413,23 +1413,42 @@ private:
 
     void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr &pubOdomAftMapped)
     {
-        nav_msgs::msg::Odometry odomAftMapped;
         odomAftMapped.header.frame_id = "camera_init";
         odomAftMapped.child_frame_id = "aft_mapped";
-        odomAftMapped.header.stamp = this->now();
+        if (publish_odometry_without_downsample)
+        {
+            odomAftMapped.header.stamp = rclcpp::Time(time_current);
+        }
+        else
+        {
+            odomAftMapped.header.stamp = rclcpp::Time(lidar_end_time);
+        }
         set_posestamp(odomAftMapped.pose.pose);
-
         pubOdomAftMapped->publish(odomAftMapped);
+        tf2::Transform transform;
+        tf2::Quaternion q;
+        transform.setOrigin(tf2::Vector3(odomAftMapped.pose.pose.position.x,
+                                         odomAftMapped.pose.pose.position.y,
+                                         odomAftMapped.pose.pose.position.z));
+        q.setW(odomAftMapped.pose.pose.orientation.w);
+        q.setX(odomAftMapped.pose.pose.orientation.x);
+        q.setY(odomAftMapped.pose.pose.orientation.y);
+        q.setZ(odomAftMapped.pose.pose.orientation.z);
+        transform.setRotation(q);
 
-        geometry_msgs::msg::TransformStamped transform;
-        transform.header = odomAftMapped.header;
-        transform.child_frame_id = odomAftMapped.child_frame_id;
-        transform.transform.translation.x = odomAftMapped.pose.pose.position.x;
-        transform.transform.translation.y = odomAftMapped.pose.pose.position.y;
-        transform.transform.translation.z = odomAftMapped.pose.pose.position.z;
-        transform.transform.rotation = odomAftMapped.pose.pose.orientation;
+        geometry_msgs::msg::TransformStamped transform_stamped;
+        transform_stamped.header.stamp = odomAftMapped.header.stamp;
+        transform_stamped.header.frame_id = "camera_init";
+        transform_stamped.child_frame_id = "aft_mapped";
+        transform_stamped.transform.translation.x = transform.getOrigin().x();
+        transform_stamped.transform.translation.y = transform.getOrigin().y();
+        transform_stamped.transform.translation.z = transform.getOrigin().z();
+        transform_stamped.transform.rotation.x = transform.getRotation().x();
+        transform_stamped.transform.rotation.y = transform.getRotation().y();
+        transform_stamped.transform.rotation.z = transform.getRotation().z();
+        transform_stamped.transform.rotation.w = transform.getRotation().w();
 
-        tf_broadcaster->sendTransform(transform);
+        tf_broadcaster->sendTransform(transform_stamped);
     }
 
     void publish_path(const rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr &pubPath)
