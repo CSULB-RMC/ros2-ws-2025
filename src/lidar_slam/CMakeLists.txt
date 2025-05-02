@@ -85,7 +85,7 @@ include/ikd-Tree/ikd_Tree.cpp
   src/Estimator.cpp
 )
 
-add_compile_definitions(ROOT_DIR="./")
+add_compile_definitions(ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/")
 
 ament_target_dependencies(laser_mapping
   rclcpp
