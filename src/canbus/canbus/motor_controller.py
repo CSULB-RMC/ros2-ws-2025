@@ -84,10 +84,33 @@ class motor_controller(Node):
             )
 
         # STMs
-        elif topic == "dig_pub":
+        elif topic == "trap":
             self.can_publish(
                 self.stmBus,
                 Vesc.id_conversion(30, 0),
+                Vesc.signal_conversion(msg.data, 4, 1),
+                True,
+            )
+
+        # STMs
+        elif topic == "ex_1_pub":
+            self.can_publish(
+                self.stmBus,
+                Vesc.id_conversion(31, 0),
+                Vesc.signal_conversion(msg.data, 4, 1),
+                True,
+            )
+        elif topic == "ex_2_pub":
+            self.can_publish(
+                self.stmBus,
+                Vesc.id_conversion(32, 0),
+                Vesc.signal_conversion(msg.data, 4, 1),
+                True,
+            )
+        elif topic == "dig":
+            self.can_publish(
+                self.stmBus,
+                Vesc.id_conversion(33, 0),
                 Vesc.signal_conversion(msg.data, 4, 1),
                 True,
             )
