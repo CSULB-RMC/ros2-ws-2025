@@ -117,7 +117,7 @@ class JoyPub(Node):
                 self.ladder_controller.ladder(msg)
             case "dig":
                 self.dig_controller.dig(msg)
-                self.trapdoor.trapdoor(msg)
+                # self.trapdoor.trapdoor(msg)
 
 
 def main():

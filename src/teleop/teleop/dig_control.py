@@ -22,14 +22,16 @@ class BucketController(Node):
         if msg.buttons[3] == 1:
             self.bucketSpeed = 10
             uint8.data = self.bucketSpeed
-            pubDelay(self.dig_pub, uint8, 0.5)
+            self.dig_pub.publish(uint8)
+            # pubDelay(self.dig_pub, uint8, 0.5)
         elif msg.buttons[3] == 0:
             self.bucketSpeed = 0
             uint8.data = self.bucketSpeed
-            pubDelay(self.dig_pub, uint8, 0.5)
+            self.dig_pub.publish(uint8)
+            # pubDelay(self.dig_pub, uint8, 0.5)
 
     def listener_callback(self, msg: Joy):
-        self.bucket(msg)
+        self.dig(msg)
 
 
 def main():

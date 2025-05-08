@@ -107,7 +107,7 @@ class motor_controller(Node):
                 Vesc.signal_conversion(msg.data, 4, 1),
                 True,
             )
-        elif topic == "dig":
+        elif topic == "dig_pub":
             self.can_publish(
                 self.stmBus,
                 Vesc.id_conversion(33, 0),
