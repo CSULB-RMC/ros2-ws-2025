@@ -54,18 +54,26 @@ class motor_controller(Node):
         # VESCs
         if topic == "dt_l_pub":
             self.can_publish(
-                Vesc.id_conversion(15, 3), Vesc.signal_conversion(msg.data, 4, 1), True
+                Vesc.id_conversion(15, 3),
+                Vesc.signal_conversion(msg.data, 4, 1000),
+                True,
             )
             self.can_publish(
-                Vesc.id_conversion(16, 3), Vesc.signal_conversion(msg.data, 4, 1), True
+                Vesc.id_conversion(16, 3),
+                Vesc.signal_conversion(msg.data, 4, 1000),
+                True,
             )
 
         elif topic == "dt_r_pub":
             self.can_publish(
-                Vesc.id_conversion(17, 3), Vesc.signal_conversion(msg.data, 4, 1), True
+                Vesc.id_conversion(17, 3),
+                Vesc.signal_conversion(msg.data, 4, 1000),
+                True,
             )
             self.can_publish(
-                Vesc.id_conversion(18, 3), Vesc.signal_conversion(msg.data, 4, 1), True
+                Vesc.id_conversion(18, 3),
+                Vesc.signal_conversion(msg.data, 4, 1000),
+                True,
             )
 
         # STMs
