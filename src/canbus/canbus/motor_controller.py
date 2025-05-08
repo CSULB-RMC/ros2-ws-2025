@@ -25,8 +25,11 @@ class motor_controller(Node):
             ],
         )
         # can bus yipie (switch channel name to 'vcan0' for virtual can testing)
-        self.bus = can.interface.Bus(
+        self.vescBus = can.interface.Bus(
             interface="socketcan", channel="can0", bitrate="500000"
+        )
+        self.stmBus = can.interface.Bus(
+            interface="socketcan", channel="can1", bitrate="500000"
         )
         topic_list: list = self.get_parameter("ros_topics").value
         self.get_logger().debug(f"{topic_list}")
@@ -42,11 +45,11 @@ class motor_controller(Node):
                 10,
             )
 
-    def can_publish(self, arbitration_id, data, is_extended_id) -> None:
+    def can_publish(self, bus, arbitration_id, data, is_extended_id) -> None:
         can_msg = can.Message(
             arbitration_id=arbitration_id, data=data, is_extended_id=is_extended_id
         )
-        self.bus.send(can_msg)
+        bus.send(can_msg)
 
     def listener_callback(self, msg: UInt8, topic: String):
         print(topic, msg.data)
@@ -54,11 +57,13 @@ class motor_controller(Node):
         # VESCs
         if topic == "dt_l_pub":
             self.can_publish(
+                self.vescBus,
                 Vesc.id_conversion(15, 3),
                 Vesc.signal_conversion(msg.data, 4, 1000),
                 True,
             )
             self.can_publish(
+                self.vescBus,
                 Vesc.id_conversion(16, 3),
                 Vesc.signal_conversion(msg.data, 4, 1000),
                 True,
@@ -66,11 +71,13 @@ class motor_controller(Node):
 
         elif topic == "dt_r_pub":
             self.can_publish(
+                self.vescBus,
                 Vesc.id_conversion(17, 3),
                 Vesc.signal_conversion(msg.data, 4, 1000),
                 True,
             )
             self.can_publish(
+                self.vescBus,
                 Vesc.id_conversion(18, 3),
                 Vesc.signal_conversion(msg.data, 4, 1000),
                 True,
@@ -79,7 +86,10 @@ class motor_controller(Node):
         # STMs
         elif topic == "dig_pub":
             self.can_publish(
-                Vesc.id_conversion(30, 0), Vesc.signal_conversion(msg.data, 4, 1), True
+                self.stmBus,
+                Vesc.id_conversion(30, 0),
+                Vesc.signal_conversion(msg.data, 4, 1),
+                True,
             )
 
 
